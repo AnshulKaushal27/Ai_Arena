@@ -69,6 +69,55 @@ class Settings(BaseSettings):
         # Misc / New Economy
         "NAUKRI.NS", "ZOMATO.NS", "IRCTC.NS", "INDIGO.NS",
         "LICI.NS", "ADANIPOWER.NS",
+        # Added Expansion Stocks
+
+# Financials
+"LICHSGFIN.NS","AUBANK.NS","ABCAPITAL.NS","MFSL.NS","PAYTM.NS",
+
+# Technology
+"LTTS.NS","TATAELXSI.NS","KPITTECH.NS","OFSS.NS",
+
+# Energy / Utilities
+"ATGL.NS","IGL.NS","MGL.NS","GSPL.NS","JSWENERGY.NS",
+
+# Industrials / Capital Goods / Defence / Railways
+"LT.NS","BEL.NS","RVNL.NS","IRFC.NS","CONCOR.NS",
+"SKFINDIA.NS","KEI.NS","APLAPOLLO.NS","SCHAEFFLER.NS",
+"SOLARINDS.NS","ESCORTS.NS","HONAUT.NS","KSB.NS",
+"RITES.NS","NBCC.NS",
+
+# Auto
+"TVSMOTOR.NS","EXIDEIND.NS","BOSCHLTD.NS",
+
+# Consumer / Retail
+"TRENT.NS","PAGEIND.NS","ABFRL.NS","UBL.NS",
+"RADICO.NS","EMAMILTD.NS","PATANJALI.NS",
+
+# Healthcare / Pharma
+"AUROPHARMA.NS","BIOCON.NS","ZYDUSLIFE.NS",
+"MANKIND.NS","LUPIN.NS","ABBOTINDIA.NS",
+
+# Materials / Chemicals / Cement
+"DALBHARAT.NS","RAMCOCEM.NS","JKCEMENT.NS",
+"TATACHEM.NS","NAVINFLUOR.NS","FLUOROCHEM.NS",
+"CLEAN.NS","KANSAINER.NS","ASTRAL.NS",
+
+# Telecom / Digital
+"INDUSTOWER.NS",
+
+# Real Estate
+"LODHA.NS","PHOENIXLTD.NS",
+
+# Consumer Discretionary / Misc
+"DEVYANI.NS","INDHOTEL.NS","CROMPTON.NS",
+"POLICYBZR.NS","NYKAA.NS","SONACOMS.NS",
+"DELHIVERY.NS","JUBLFOOD.NS","PAYTM.NS",
+
+# Additional Diversifiers
+"SRTRANSFIN.NS","BSE.NS","CAMS.NS","MCX.NS",
+"LAURUSLABS.NS","FORTIS.NS","PPLPHARMA.NS",
+"HINDZINC.NS","VEDL.NS","SUPREMEIND.NS",
+"PEL.NS","UNIONBANK.NS","IOC.NS",
     ]
 
     class Config:
@@ -156,4 +205,97 @@ SECTOR_MAP: dict[str, str] = {
     "NAUKRI.NS": "Technology", "ZOMATO.NS": "Consumer Discretionary",
     "IRCTC.NS": "Industrials", "INDIGO.NS": "Industrials", "LICI.NS": "Insurance",
     "WHIRLPOOL.NS": "Consumer Discretionary",
+    # Added Sector Map Entries
+
+"LICHSGFIN.NS":"Financials",
+"AUBANK.NS":"Financials",
+"ABCAPITAL.NS":"Financials",
+"MFSL.NS":"Financials",
+"PAYTM.NS":"Technology",
+
+"LTTS.NS":"Technology",
+"TATAELXSI.NS":"Technology",
+"KPITTECH.NS":"Technology",
+"OFSS.NS":"Technology",
+
+"ATGL.NS":"Energy",
+"IGL.NS":"Energy",
+"MGL.NS":"Energy",
+"GSPL.NS":"Energy",
+"JSWENERGY.NS":"Utilities",
+
+"LT.NS":"Industrials",
+"BEL.NS":"Industrials",
+"RVNL.NS":"Industrials",
+"IRFC.NS":"Financials",
+"CONCOR.NS":"Industrials",
+"SKFINDIA.NS":"Industrials",
+"KEI.NS":"Industrials",
+"APLAPOLLO.NS":"Industrials",
+"SCHAEFFLER.NS":"Industrials",
+"SOLARINDS.NS":"Industrials",
+"ESCORTS.NS":"Industrials",
+"HONAUT.NS":"Industrials",
+"KSB.NS":"Industrials",
+"RITES.NS":"Industrials",
+"NBCC.NS":"Industrials",
+
+"TVSMOTOR.NS":"Auto",
+"EXIDEIND.NS":"Auto",
+"BOSCHLTD.NS":"Auto",
+
+"TRENT.NS":"Consumer Discretionary",
+"PAGEIND.NS":"Consumer Discretionary",
+"ABFRL.NS":"Consumer Discretionary",
+"UBL.NS":"Consumer Staples",
+"RADICO.NS":"Consumer Staples",
+"EMAMILTD.NS":"Consumer Staples",
+"PATANJALI.NS":"Consumer Staples",
+
+"AUROPHARMA.NS":"Healthcare",
+"BIOCON.NS":"Healthcare",
+"ZYDUSLIFE.NS":"Healthcare",
+"MANKIND.NS":"Healthcare",
+"LUPIN.NS":"Healthcare",
+"ABBOTINDIA.NS":"Healthcare",
+
+"DALBHARAT.NS":"Basic Materials",
+"RAMCOCEM.NS":"Basic Materials",
+"JKCEMENT.NS":"Basic Materials",
+"TATACHEM.NS":"Basic Materials",
+"NAVINFLUOR.NS":"Basic Materials",
+"FLUOROCHEM.NS":"Basic Materials",
+"CLEAN.NS":"Basic Materials",
+"KANSAINER.NS":"Basic Materials",
+"ASTRAL.NS":"Basic Materials",
+
+"INDUSTOWER.NS":"Telecom",
+
+"LODHA.NS":"Real Estate",
+"PHOENIXLTD.NS":"Real Estate",
+
+"DEVYANI.NS":"Consumer Discretionary",
+"INDHOTEL.NS":"Consumer Discretionary",
+"CROMPTON.NS":"Consumer Discretionary",
+"POLICYBZR.NS":"Technology",
+"NYKAA.NS":"Consumer Discretionary",
+"SONACOMS.NS":"Auto",
+"DELHIVERY.NS":"Industrials",
+"JUBLFOOD.NS":"Consumer Discretionary",
+
+"SRTRANSFIN.NS":"Financials",
+"BSE.NS":"Financials",
+"CAMS.NS":"Financials",
+"MCX.NS":"Financials",
+
+"LAURUSLABS.NS":"Healthcare",
+"FORTIS.NS":"Healthcare",
+"PPLPHARMA.NS":"Healthcare",
+
+"HINDZINC.NS":"Basic Materials",
+"VEDL.NS":"Basic Materials",
+"SUPREMEIND.NS":"Basic Materials",
+
+"PEL.NS":"Financials",
+"UNIONBANK.NS":"Financials",
 }
