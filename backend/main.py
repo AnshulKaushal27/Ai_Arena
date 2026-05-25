@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import Base, engine
 from routes import leaderboard, portfolios, market, admin
 from scheduler import setup_scheduler
+from database import Portfolio, DailyValuation
 
 # ── Logging ────────────────────────────────────────────────────────────────
 logging.basicConfig(
