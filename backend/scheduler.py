@@ -21,7 +21,32 @@ IST = pytz.timezone("Asia/Kolkata")
 # Ensure tables exist
 Base.metadata.create_all(bind=engine)
 
+import httpx
+from datetime import date
 
+NSE_HOLIDAYS_2025_2026 = {
+    # 2025
+    date(2025, 1, 26), date(2025, 2, 26), date(2025, 3, 14),
+    date(2025, 3, 31), date(2025, 4, 14), date(2025, 4, 18),
+    date(2025, 5, 1),  date(2025, 8, 15), date(2025, 8, 27),
+    date(2025, 10, 2), date(2025, 10, 2), date(2025, 10, 24),
+    date(2025, 11, 5), date(2025, 12, 25),
+    # 2026
+    date(2026, 1, 26), date(2026, 3, 20), date(2026, 4, 3),
+    date(2026, 4, 14), date(2026, 5, 1),  date(2026, 8, 15),
+    date(2026, 10, 2), date(2026, 10, 14),date(2026, 11, 24),
+    date(2026, 12, 25),
+}
+
+
+def is_trading_day(d: date | None = None) -> bool:
+    """Returns True only if d is a weekday and not an NSE holiday."""
+    d = d or date.today()
+    if d.weekday() >= 5:          # Saturday=5, Sunday=6
+        return False
+    if d in NSE_HOLIDAYS_2025_2026:
+        return False
+    return True
 # ── Helper ─────────────────────────────────────────────────────────────────
 
 def _get_prev_context(db, model_name: str) -> dict | None:
@@ -57,6 +82,10 @@ def _get_prev_context(db, model_name: str) -> dict | None:
 # ── Jobs ───────────────────────────────────────────────────────────────────
 
 async def morning_job():
+    if not is_trading_day():
+        logger.info(f"Skipping morning job — {date.today()} is not a trading day")
+        return
+
     """8:40 AM IST — fetch data, rank, generate portfolios."""
     logger.info("━━━ 🌅  Morning job started ━━━")
     db    = SessionLocal()
@@ -186,6 +215,9 @@ async def morning_job():
 
 
 async def closing_job():
+    if not is_trading_day():
+        logger.info(f"Skipping closing job — {date.today()} is not a trading day")
+        return
     """3:45 PM IST — update valuations for today's portfolios."""
     logger.info("━━━ 📊  Closing job started ━━━")
     db = SessionLocal()
@@ -208,6 +240,7 @@ def setup_scheduler() -> AsyncIOScheduler:
         CronTrigger(
             hour=settings.MORNING_HOUR,
             minute=settings.MORNING_MINUTE,
+            day_of_week="mon-fri",
             timezone=IST,
         ),
         id="morning_job",
@@ -221,6 +254,7 @@ def setup_scheduler() -> AsyncIOScheduler:
         CronTrigger(
             hour=settings.CLOSING_HOUR,
             minute=settings.CLOSING_MINUTE,
+            day_of_week="mon-fri",
             timezone=IST,
         ),
         id="closing_job",
