@@ -1138,16 +1138,117 @@ function PortfoliosPage() {
               {detailLoading ? (
                 <div style={{ display: "flex", justifyContent: "center", padding: 40 }}><Spinner /></div>
               ) : (
-                <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 10, padding: 20 }}>
-                  <div style={{ marginBottom: 16 }}>
-                    <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                      Portfolio Detail
+                <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 10, padding: 20, display: "flex", flexDirection: "column", gap: 18 }}>
+                  {/* Header */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div>
+                      <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                        Portfolio Detail
+                      </div>
+                      <div style={{
+                        fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 700, marginTop: 4,
+                        color: MODEL_COLORS[detail.model] ?? "var(--text)",
+                      }}>
+                        {MODEL_ICONS[detail.model]} {MODEL_LABELS[detail.model] ?? detail.model}
+                      </div>
+                      <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{detail.date}</div>
                     </div>
-                    <div style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 700, marginTop: 4 }}>
-                      {MODEL_LABELS[detail.model] ?? detail.model}
+                    <div style={{ textAlign: "right" }}>
+                      <Tag color={RISK_COLOR[detail.risk_level] ?? "var(--text-muted)"}>{detail.risk_level}</Tag>
+                      {detail.latest_valuation && (
+                        <div style={{
+                          fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 800, marginTop: 6,
+                          color: returnColor(detail.latest_valuation.return_pct),
+                        }}>
+                          {pct(detail.latest_valuation.return_pct)}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  {/* Additional detail content would go here */}
+
+                  {/* Key Stats */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                    {[
+                      { label: "Capital",  value: fmtINR(detail.starting_capital),  color: "var(--text)" },
+                      { label: "Invested", value: fmtINR(detail.total_invested),     color: MODEL_COLORS[detail.model] ?? "var(--accent)" },
+                      { label: "Cash",     value: fmtINR(detail.remaining_cash),     color: "var(--text-muted)" },
+                      ...(detail.latest_valuation ? [
+                        { label: "Curr. Value", value: fmtINR(detail.latest_valuation.portfolio_value), color: "var(--text)" },
+                        { label: "Unr. P&L",   value: fmtINR(detail.latest_valuation.unrealized_pnl),  color: returnColor(detail.latest_valuation.unrealized_pnl) },
+                        { label: "Holdings",    value: String(detail.holdings_count),                   color: "var(--gold)" },
+                      ] : [
+                        { label: "Holdings", value: String(detail.holdings_count), color: "var(--gold)" },
+                      ]),
+                    ].map(({ label, value, color }) => (
+                      <div key={label} style={{
+                        background: "var(--card2)", borderRadius: 7, padding: "10px 12px",
+                        border: "1px solid var(--border)",
+                      }}>
+                        <div style={{ fontSize: 9, color: "var(--text-dim)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>
+                          {label}
+                        </div>
+                        <div style={{ fontSize: 13, fontFamily: "var(--font-display)", fontWeight: 700, color }}>
+                          {value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Strategy */}
+                  <div style={{ background: "var(--card2)", borderRadius: 7, padding: "10px 14px", border: "1px solid var(--border)" }}>
+                    <div style={{ fontSize: 9, color: "var(--text-dim)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
+                      Strategy
+                    </div>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.6 }}>
+                      {detail.strategy_summary}
+                    </div>
+                  </div>
+
+                  {/* Valuation History Sparkline */}
+                  {detail.valuation_history.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 9, color: "var(--text-dim)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
+                        Value Over Time
+                      </div>
+                      <div style={{ background: "var(--card2)", borderRadius: 7, padding: "12px 8px", border: "1px solid var(--border)" }}>
+                        <ResponsiveContainer width="100%" height={100}>
+                          <AreaChart data={detail.valuation_history}>
+                            <defs>
+                              <linearGradient id="detailGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%"  stopColor={MODEL_COLORS[detail.model] ?? "#888"} stopOpacity={0.3} />
+                                <stop offset="95%" stopColor={MODEL_COLORS[detail.model] ?? "#888"} stopOpacity={0} />
+                              </linearGradient>
+                            </defs>
+                            <XAxis dataKey="date" tick={{ fontSize: 9, fill: "var(--text-dim)" }} />
+                            <YAxis tick={{ fontSize: 9, fill: "var(--text-dim)" }} width={55}
+                              tickFormatter={(v: number) => fmtINR(v)} />
+                            <Tooltip
+                              contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 10 }}
+                              formatter={(v: number) => [fmtINR(v), "Portfolio Value"]}
+                            />
+                            <Area
+                              type="monotone" dataKey="portfolio_value"
+                              stroke={MODEL_COLORS[detail.model] ?? "#888"} strokeWidth={2}
+                              fill="url(#detailGrad)"
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Holdings Table */}
+                  {detail.holdings.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 9, color: "var(--text-dim)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
+                        Holdings
+                      </div>
+                      <HoldingsTable
+                        holdings={detail.holdings}
+                        modelColor={MODEL_COLORS[detail.model] ?? "#888"}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1392,11 +1493,6 @@ export default function Home() {
         padding: "76px 24px 60px",
         display: "flex", flexDirection: "column", gap: 24,
       }}>
-        {/* Admin Banner — always visible */}
-        <div className="fade-up">
-          <AdminBanner />
-        </div>
-
         {/* Page content */}
         <div className="fade-up-1">
           {page === "dashboard"   && <DashboardPage  sim={sim}  loading={simLoading} />}
