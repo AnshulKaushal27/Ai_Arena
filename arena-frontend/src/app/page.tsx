@@ -655,39 +655,7 @@ function DashboardPage({ sim, loading }: { sim: SimData | null; loading: boolean
           </div>
         </div>
 
-        {/* Quick Start Guide */}
-        <div style={{
-          background: "var(--card)", border: "1px solid var(--border)",
-          borderRadius: 10, padding: "24px 28px",
-        }}>
-          <SectionTitle>Getting Started</SectionTitle>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <div style={{ background: "var(--card2)", borderRadius: 8, padding: "16px", border: "1px solid var(--border)" }}>
-              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: "var(--accent)" }}>1. Run Simulation</div>
-              <div style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.6 }}>
-                Click <strong>"Run Simulation"</strong> in the admin panel below to generate portfolios from all 4 AI models
-              </div>
-            </div>
-            <div style={{ background: "var(--card2)", borderRadius: 8, padding: "16px", border: "1px solid var(--border)" }}>
-              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: "var(--accent2)" }}>2. Update Valuations</div>
-              <div style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.6 }}>
-                Click <strong>"Update Valuations"</strong> to fetch latest NSE prices and recalculate P&L
-              </div>
-            </div>
-            <div style={{ background: "var(--card2)", borderRadius: 8, padding: "16px", border: "1px solid var(--border)" }}>
-              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: "var(--accent3)" }}>3. Check Market Intel</div>
-              <div style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.6 }}>
-                Visit <strong>Market Intel</strong> tab to see TOPSIS scores and technical analysis
-              </div>
-            </div>
-            <div style={{ background: "var(--card2)", borderRadius: 8, padding: "16px", border: "1px solid var(--border)" }}>
-              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: "var(--green)" }}>4. Monitor History</div>
-              <div style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.6 }}>
-                Track cumulative returns across all models over time in the <strong>History</strong> tab
-              </div>
-            </div>
-          </div>
-        </div>
+
       </div>
     );
   }
