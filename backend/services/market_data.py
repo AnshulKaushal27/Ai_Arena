@@ -273,117 +273,226 @@ def _fetch_candles(
 """
 FIXED get_latest_prices() — Add this to your market_data.py
 """
-
 def get_latest_prices(tickers: List[str]) -> Dict[str, float]:
     """
-    Fetch last traded price for all tickers via Upstox LTP V3.
-    Single API call regardless of ticker count.
-    
-    FIXED: Added extensive logging to debug response parsing.
+    Fetch latest prices from Upstox LTP V3.
+
+    FIXED:
+    - Uses payload["instrument_token"]
+    - Correctly maps prices back to Yahoo tickers
+    - Handles Upstox response structure properly
     """
+
     if not tickers:
         return {}
 
     _ensure_instruments(tickers)
 
+    # instrument_token -> yahoo ticker
     ikey_map: Dict[str, str] = {}
-    for t in tickers:
-        k = _ikey(t)
-        if k:
-            ikey_map[k] = t
+
+    for ticker in tickers:
+        key = _ikey(ticker)
+
+        if key:
+            ikey_map[key] = ticker
         else:
-            logger.warning(f"{t}: no instrument key — entry price will be used")
+            logger.warning(
+                f"{ticker}: no instrument key — entry price fallback"
+            )
 
     if not ikey_map:
-        logger.error("❌ No instrument keys resolved! ikey_map is empty")
+        logger.error("❌ No instrument keys resolved")
         return {}
 
     try:
-        instrument_keys_str = ",".join(ikey_map)
-        url = f"{UPSTOX_BASE}/v3/market-quote/ltp"
-        
-        logger.info(f"📡 LTP Request:")
-        logger.info(f"   URL: {url}")
-        logger.info(f"   Params: instrument_key={instrument_keys_str}")
-        logger.info(f"   ikey_map: {ikey_map}")
-        
+
+        instrument_keys = ",".join(ikey_map.keys())
+
         resp = _HTTP.get(
-            url,
-            params={"instrument_key": instrument_keys_str},
+            f"{UPSTOX_BASE}/v3/market-quote/ltp",
+            params={"instrument_key": instrument_keys},
             headers=_h(),
         )
-        
-        # ⚠️  CAPTURE RESPONSE
-        logger.info(f"✅ Response Status: {resp.status_code}")
-        logger.info(f"📝 Response Headers: {dict(resp.headers)}")
-        
+
         if resp.status_code == 401:
-            raise RuntimeError("Upstox Analytics Token rejected (401)")
+            raise RuntimeError(
+                "Upstox Analytics Token rejected (401)"
+            )
 
         resp.raise_for_status()
 
-        # ⚠️  LOG RAW RESPONSE
-        raw_text = resp.text[:3000]  # First 3000 chars
-        logger.info(f"📄 Raw Response Body:\n{raw_text}")
-        
-        # ⚠️  PARSE AND INSPECT
-        json_data = resp.json()
-        logger.info(f"✅ Parsed as JSON successfully")
-        logger.info(f"🔑 Top-level keys in response: {list(json_data.keys())}")
-        logger.info(f"📊 Full response object: {json_data}")
-        
-        # ⚠️  LOOK FOR DATA KEY
-        data_obj = json_data.get("data", {})
-        logger.info(f"🔍 data object type: {type(data_obj)}")
-        logger.info(f"🔍 data object: {data_obj}")
-        logger.info(f"🔍 data object keys: {list(data_obj.keys()) if isinstance(data_obj, dict) else 'N/A'}")
-        logger.info(f"🔍 data object length: {len(data_obj) if hasattr(data_obj, '__len__') else 'N/A'}")
-        
-        # ⚠️  PARSE PRICES
+        body = resp.json()
+        data = body.get("data", {})
+
+        if not isinstance(data, dict):
+            logger.error(
+                f"❌ Invalid response format: {type(data)}"
+            )
+            return {}
+
         prices: Dict[str, float] = {}
-        
-        if not isinstance(data_obj, dict):
-            logger.error(f"❌ data is not a dict! Type: {type(data_obj)}, value: {data_obj}")
-            return {}
-        
-        if not data_obj:
-            logger.error(f"❌ data dict is empty! Response may have no prices.")
-            return {}
-        
-        for key_colon, payload in data_obj.items():
-            logger.debug(f"  Processing key: {key_colon}")
-            logger.debug(f"    Payload: {payload}")
-            
-            # Try both formats: with colon and with pipe
-            key_with_pipe = key_colon.replace(":", "|")
-            logger.debug(f"    Looking up (after replace): {key_with_pipe}")
-            
-            yahoo = ikey_map.get(key_with_pipe)
-            
-            if not yahoo:
-                logger.warning(f"    ⚠️  Key {key_colon} not in ikey_map")
-                logger.warning(f"       ikey_map keys: {list(ikey_map.keys())}")
-                continue
-            
+
+        for _, payload in data.items():
+
+            instrument_token = payload.get("instrument_token")
             last_price = payload.get("last_price")
-            logger.debug(f"    ✓ {yahoo} = {last_price}")
-            
+
+            if not instrument_token:
+                logger.warning(
+                    f"Missing instrument_token in payload: {payload}"
+                )
+                continue
+
+            yahoo_ticker = ikey_map.get(instrument_token)
+
+            if not yahoo_ticker:
+                logger.warning(
+                    f"⚠️ Instrument token not found in map: "
+                    f"{instrument_token}"
+                )
+                continue
+
             if last_price is not None:
-                prices[yahoo] = float(last_price)
-        
-        logger.info(f"📈 Final prices extracted: {prices}")
-        logger.info(f"✅ LTP: {len(prices)}/{len(tickers)} prices fetched")
-        
-        if len(prices) == 0:
-            logger.critical("❌ ZERO PRICES FETCHED! Check response structure above ↑")
-        
+                prices[yahoo_ticker] = float(last_price)
+
+                logger.info(
+                    f"✓ {yahoo_ticker:<20} "
+                    f"₹{float(last_price):,.2f}"
+                )
+
+        logger.info(
+            f"✅ LTP fetched: "
+            f"{len(prices)}/{len(tickers)} prices"
+        )
+
+        if not prices:
+            logger.critical(
+                "❌ ZERO PRICES FETCHED!"
+            )
+
         return prices
 
     except RuntimeError:
         raise
+
     except Exception as exc:
-        logger.error(f"❌ LTP fetch failed: {exc}", exc_info=True)
+        logger.error(
+            f"❌ LTP fetch failed: {exc}",
+            exc_info=True,
+        )
         return {}
+
+# def get_latest_prices(tickers: List[str]) -> Dict[str, float]:
+#     """
+#     Fetch last traded price for all tickers via Upstox LTP V3.
+#     Single API call regardless of ticker count.
+    
+#     FIXED: Added extensive logging to debug response parsing.
+#     """
+#     if not tickers:
+#         return {}
+
+#     _ensure_instruments(tickers)
+
+#     ikey_map: Dict[str, str] = {}
+#     for t in tickers:
+#         k = _ikey(t)
+#         if k:
+#             ikey_map[k] = t
+#         else:
+#             logger.warning(f"{t}: no instrument key — entry price will be used")
+
+#     if not ikey_map:
+#         logger.error("❌ No instrument keys resolved! ikey_map is empty")
+#         return {}
+
+#     try:
+#         instrument_keys_str = ",".join(ikey_map)
+#         url = f"{UPSTOX_BASE}/v3/market-quote/ltp"
+        
+#         logger.info(f"📡 LTP Request:")
+#         logger.info(f"   URL: {url}")
+#         logger.info(f"   Params: instrument_key={instrument_keys_str}")
+#         logger.info(f"   ikey_map: {ikey_map}")
+        
+#         resp = _HTTP.get(
+#             url,
+#             params={"instrument_key": instrument_keys_str},
+#             headers=_h(),
+#         )
+        
+#         # ⚠️  CAPTURE RESPONSE
+#         logger.info(f"✅ Response Status: {resp.status_code}")
+#         logger.info(f"📝 Response Headers: {dict(resp.headers)}")
+        
+#         if resp.status_code == 401:
+#             raise RuntimeError("Upstox Analytics Token rejected (401)")
+
+#         resp.raise_for_status()
+
+#         # ⚠️  LOG RAW RESPONSE
+#         raw_text = resp.text[:3000]  # First 3000 chars
+#         logger.info(f"📄 Raw Response Body:\n{raw_text}")
+        
+#         # ⚠️  PARSE AND INSPECT
+#         json_data = resp.json()
+#         logger.info(f"✅ Parsed as JSON successfully")
+#         logger.info(f"🔑 Top-level keys in response: {list(json_data.keys())}")
+#         logger.info(f"📊 Full response object: {json_data}")
+        
+#         # ⚠️  LOOK FOR DATA KEY
+#         data_obj = json_data.get("data", {})
+#         logger.info(f"🔍 data object type: {type(data_obj)}")
+#         logger.info(f"🔍 data object: {data_obj}")
+#         logger.info(f"🔍 data object keys: {list(data_obj.keys()) if isinstance(data_obj, dict) else 'N/A'}")
+#         logger.info(f"🔍 data object length: {len(data_obj) if hasattr(data_obj, '__len__') else 'N/A'}")
+        
+#         # ⚠️  PARSE PRICES
+#         prices: Dict[str, float] = {}
+        
+#         if not isinstance(data_obj, dict):
+#             logger.error(f"❌ data is not a dict! Type: {type(data_obj)}, value: {data_obj}")
+#             return {}
+        
+#         if not data_obj:
+#             logger.error(f"❌ data dict is empty! Response may have no prices.")
+#             return {}
+        
+#         for key_colon, payload in data_obj.items():
+#             logger.debug(f"  Processing key: {key_colon}")
+#             logger.debug(f"    Payload: {payload}")
+            
+#             # Try both formats: with colon and with pipe
+#             key_with_pipe = key_colon.replace(":", "|")
+#             logger.debug(f"    Looking up (after replace): {key_with_pipe}")
+            
+#             yahoo = ikey_map.get(key_with_pipe)
+            
+#             if not yahoo:
+#                 logger.warning(f"    ⚠️  Key {key_colon} not in ikey_map")
+#                 logger.warning(f"       ikey_map keys: {list(ikey_map.keys())}")
+#                 continue
+            
+#             last_price = payload.get("last_price")
+#             logger.debug(f"    ✓ {yahoo} = {last_price}")
+            
+#             if last_price is not None:
+#                 prices[yahoo] = float(last_price)
+        
+#         logger.info(f"📈 Final prices extracted: {prices}")
+#         logger.info(f"✅ LTP: {len(prices)}/{len(tickers)} prices fetched")
+        
+#         if len(prices) == 0:
+#             logger.critical("❌ ZERO PRICES FETCHED! Check response structure above ↑")
+        
+#         return prices
+
+#     except RuntimeError:
+#         raise
+#     except Exception as exc:
+#         logger.error(f"❌ LTP fetch failed: {exc}", exc_info=True)
+#         return {}
 
 
 # ── Indicators ─────────────────────────────────────────────────────────────
