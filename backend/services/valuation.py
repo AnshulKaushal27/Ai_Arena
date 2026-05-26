@@ -1,7 +1,7 @@
 """
-valuation.py
-~~~~~~~~~~~~
-Mark-to-market engine.
+valuation.py (FIXED)
+~~~~~~~~~~~~~~~~~~~~
+Mark-to-market engine with proper error visibility.
 Prices sourced from Upstox LTP V3 via get_latest_prices()
 in services/market_data.py — single API call for all held tickers.
 """
@@ -42,7 +42,20 @@ def update_valuations(db: Session, target_date: Optional[date] = None) -> int:
 
     # One LTP call for every unique ticker across all portfolios
     all_tickers = list({h.ticker for p in portfolios for h in p.holdings})
+    
+    logger.info(f"🔍 Fetching prices for {len(all_tickers)} unique tickers: {all_tickers}")
+    
     prices: Dict[str, float] = get_latest_prices(all_tickers)
+    
+    # ⚠️  CHECK: Did we actually get prices?
+    fetched_count = len(prices)
+    logger.warning(f"⚠️  PRICES FETCHED: {fetched_count}/{len(all_tickers)}")
+    if fetched_count < len(all_tickers):
+        missing = set(all_tickers) - set(prices.keys())
+        logger.error(f"❌ MISSING PRICES: {missing}")
+    
+    if not prices:
+        logger.critical("❌ FATAL: Zero prices fetched! Valuations will be incorrect (using entry prices as fallback)")
 
     updated = 0
 
@@ -53,7 +66,12 @@ def update_valuations(db: Session, target_date: Optional[date] = None) -> int:
         current_value = portfolio.remaining_cash
 
         for holding in portfolio.holdings:
-            px             = prices.get(holding.ticker, holding.entry_price)
+            px = prices.get(holding.ticker, holding.entry_price)
+            
+            # Log if we're using fallback price
+            if holding.ticker not in prices:
+                logger.debug(f"  ⚠️  [{holding.ticker}] Using entry price ₹{holding.entry_price} (no live quote)")
+            
             current_value += holding.quantity * px
 
         return_pct = (
