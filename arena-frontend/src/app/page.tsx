@@ -700,26 +700,54 @@ function DashboardPage({ sim, loading }: { sim: SimData | null; loading: boolean
           {/* Right: Stats & Sector Allocation */}
           <div className="fade-up-2" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             {/* Key Stats */}
-            <div>
-              <SectionTitle>Key Metrics</SectionTitle>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <StatBox
-                  label="Capital"
-                  value={fmtINR(activeResult.starting_capital)}
-                  color="var(--text)"
-                />
-                <StatBox
-                  label="Invested"
-                  value={fmtINR(activeResult.starting_capital - activeResult.remaining_cash)}
-                  color="var(--accent)"
-                />
-                <StatBox
-                  label="Cash"
-                  value={fmtINR(activeResult.remaining_cash)}
-                  color="var(--text-muted)"
-                />
-              </div>
-            </div>
+<div>
+  <SectionTitle>Key Metrics</SectionTitle>
+
+  <div style={{
+      display:"flex",
+      flexDirection:"column",
+      gap:10
+  }}>
+
+    <StatBox
+      label="Portfolio Value"
+      value={fmtINR(activeResult.portfolio_value)}
+      color="var(--text)"
+    />
+
+    <StatBox
+      label="Return %"
+      value={pct(activeResult.current_return)}
+      color={returnColor(activeResult.current_return)}
+    />
+
+    <StatBox
+      label="Unrealized P&L"
+      value={fmtINR(
+        (activeResult.portfolio_value ?? 0) -
+        activeResult.starting_capital
+      )}
+      color={
+        (activeResult.current_return ?? 0) >= 0
+          ? "var(--green)"
+          : "var(--red)"
+      }
+    />
+
+    <StatBox
+      label="Cash Remaining"
+      value={fmtINR(activeResult.remaining_cash)}
+      color="var(--text-muted)"
+    />
+
+    <StatBox
+      label="Holdings"
+      value={String(activeResult.portfolio.length)}
+      color="var(--gold)"
+    />
+
+  </div>
+</div>
 
             {/* Sector Allocation */}
             {radarData.length > 0 && (
