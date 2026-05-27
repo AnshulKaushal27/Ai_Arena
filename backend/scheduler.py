@@ -26,16 +26,41 @@ from datetime import date
 
 NSE_HOLIDAYS_2025_2026 = {
     # 2025
-    date(2025, 1, 26), date(2025, 2, 26), date(2025, 3, 14),
-    date(2025, 3, 31), date(2025, 4, 14), date(2025, 4, 18),
-    date(2025, 5, 1),  date(2025, 8, 15), date(2025, 8, 27),
-    date(2025, 10, 2), date(2025, 10, 2), date(2025, 10, 24),
-    date(2025, 11, 5), date(2025, 12, 25),
-    # 2026
-    date(2026, 1, 26), date(2026, 3, 20), date(2026, 4, 3),
-    date(2026, 4, 14), date(2026, 5, 1),  date(2026, 8, 15),
-    date(2026, 10, 2), date(2026, 10, 14),date(2026, 11, 24),
-    date(2026, 12, 25),
+    # ===== 2026 =====
+    date(2026, 1, 15),   # Municipal Corporation Election - Maharashtra
+    date(2026, 1, 26),   # Republic Day
+    date(2026, 3, 3),    # Holi
+    date(2026, 3, 26),   # Shri Ram Navami
+    date(2026, 3, 31),   # Shri Mahavir Jayanti
+    date(2026, 4, 3),    # Good Friday
+    date(2026, 4, 14),   # Dr. Baba Saheb Ambedkar Jayanti
+    date(2026, 5, 1),    # Maharashtra Day
+    date(2026, 5, 28),   # Bakri Id
+    date(2026, 6, 26),   # Muharram
+    date(2026, 9, 14),   # Ganesh Chaturthi
+    date(2026, 10, 2),   # Gandhi Jayanti
+    date(2026, 10, 20),  # Dussehra
+    date(2026, 11, 10),  # Diwali-Balipratipada
+    date(2026, 11, 24),  # Guru Nanak Jayanti
+    date(2026, 12, 25),  # Christmas
+    # ===== 2027 =====
+    date(2027, 1, 26),   # Republic Day
+    date(2027, 3, 1),    # Mahashivratri
+    date(2027, 3, 22),   # Holi
+    date(2027, 3, 30),   # Good Friday
+    date(2027, 4, 11),   # Id-Ul-Fitr (tentative)
+    date(2027, 4, 14),   # Dr. Baba Saheb Ambedkar Jayanti
+    date(2027, 4, 21),   # Ram Navami
+    date(2027, 5, 1),    # Maharashtra Day
+    date(2027, 6, 17),   # Bakri Id (tentative)
+    date(2027, 8, 15),   # Independence Day
+    date(2027, 9, 5),    # Ganesh Chaturthi
+    date(2027, 10, 2),   # Gandhi Jayanti
+    date(2027, 10, 9),   # Dussehra
+    date(2027, 11, 1),   # Diwali Laxmi Pujan
+    date(2027, 11, 2),   # Diwali Balipratipada
+    date(2027, 11, 15),  # Guru Nanak Jayanti
+    date(2027, 12, 25),  # Christmas
 }
 
 
