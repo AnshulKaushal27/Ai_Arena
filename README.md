@@ -1,602 +1,418 @@
-# 🤖 AI Investment Arena
+# AI Investment Arena
 
-**An AI-powered hedge fund simulator for Indian equities (NSE/NIFTY200)**
+**An AI-Powered Hedge Fund Simulator for Indian Equities (NSE/NIFTY200)**
 
-Compete multiple LLM-based investment strategies against each other in real-time. Watch different AI models manage portfolios with distinct philosophies—from aggressive growth to conservative value investing—and track daily P&L in a live leaderboard.
-
----
-
-## 🎯 Features
-
-### Multi-Model Portfolio Management
-- **4 distinct AI personas** with different investment philosophies:
-  - **GPT-4o mini**: Disciplined quantitative approach (diversified, risk-adjusted)
-  - **Gemini 2.5 Flash**: Aggressive growth (concentrated in high-TOPSIS picks)
-  - **Mistral Voxtral**: Conservative value (sector-focused, low volatility)
-  - **DeepSeek V4**: Pure data-driven (TOPSIS-ranked, no narrative bias)
-
-### Real-Time Market Data
-- **Upstox API integration** for live NSE quotes and historical candle data
-- **Intelligent caching** of instrument keys (7-day TTL)
-- **Automatic fallback resolution** (CSV → Search API → Cache)
-
-### Daily Portfolio Simulation
-- Fetches opening prices (~9:30 AM IST) → LLM generates portfolios
-- Tracks closing prices (~3:30 PM IST) → Updates daily P&L
-- Calculates unrealized gains/losses per holding
-
-### Technical Analysis
-- **RSI** (14-period, overbought/oversold detection)
-- **SMA 20/50** (trend scoring)
-- **Volatility** (annualized %)
-- **Volume Ratio** (20-day average comparison)
-- **TOPSIS ranking** (multi-criteria decision analysis)
-
-### Live Leaderboard
-- Per-model performance tracking
-- 1-day, 1-month, all-time returns
-- Detailed portfolio breakdown by holding
-
-### Manual Override System
-- Trigger data fetch outside scheduled times
-- Preserve entry price integrity (no data loss on recalculation)
-- Optional backup before market close
+Compete multiple LLM-driven investment strategies against each other in real-time. Watch different AI models manage portfolios with distinct philosophies, generate stock picks, and compete on a live performance leaderboard.
 
 ---
 
-## 🏗️ Architecture
+## 📌 Overview
+
+AI Investment Arena simulates a multi-manager hedge fund where different Large Language Models act as portfolio managers with unique investment styles.
+
+Each day:
+
+- Market data is collected from NSE stocks
+- Technical indicators are calculated
+- Stocks are ranked using TOPSIS
+- Multiple AI models build portfolios
+- Performance is tracked throughout the trading session
+- A live leaderboard ranks the best-performing AI manager
+
+---
+
+## 🎯 Key Features
+
+### 🤖 Multiple AI Portfolio Managers
+
+| Model | Philosophy |
+|---|---|
+| GPT-4o Mini | Quantitative & Risk-Adjusted |
+| Gemini 2.5 Flash | Aggressive Growth |
+| Mistral Voxtral | Conservative Value |
+| DeepSeek V4 | Pure Data-Driven TOPSIS |
+
+### 📈 Real-Time Market Data
+
+- Upstox API Integration
+- NSE Live Quotes
+- Historical Candle Data
+- Instrument Key Resolution
+- Multi-Level Caching System
+- Automatic Fallback Mechanisms
+
+### 📊 Technical Analysis Engine
+
+The ranking engine computes:
+
+| Indicator | Description |
+|---|---|
+| RSI | 14-period Relative Strength Index |
+| SMA 20 | 20-period Simple Moving Average |
+| SMA 50 | 50-period Simple Moving Average |
+| Volatility | Annualized Volatility |
+| Volume Ratio | Relative volume vs average |
+| Trend Score | Composite trend direction |
+| 1-Month Return | Rolling 1-month price return |
+| TOPSIS Score | Final multi-factor ranking |
+
+### 💰 Portfolio Simulation
 
 ```
-┌─────────────────────────────────────────────────────┐
-│              FastAPI Backend (main.py)              │
-├─────────────────────────────────────────────────────┤
-│                                                     │
-│  ┌─────────────────────────────────────────────┐   │
-│  │    Routes (Routers)                         │   │
-│  ├──────────────────────────────────────────────┤   │
-│  │ • /market → Latest TOPSIS candidates        │   │
-│  │ • /portfolios → Fetch portfolio details     │   │
-│  │ • /leaderboard → Per-model rankings         │   │
-│  │ • /admin/simulate-and-save → Manual trigger │   │
-│  └─────────────────────────────────────────────┘   │
-│                      │                              │
-│  ┌────────────────────┴──────────────────────┐     │
-│  │                                           │      │
-│  ▼                                           ▼      │
-│ ┌──────────────────────┐    ┌──────────────────┐   │
-│ │   Services          │    │  Database        │   │
-│ ├──────────────────────┤    ├──────────────────┤   │
-│ │ • market_data.py    │    │ • Portfolio      │   │
-│ │ • llm_portfolio.py  │    │ • Holding        │   │
-│ │ • valuation.py      │    │ • DailyValuation │   │
-│ └──────────────────────┘    │ • MarketSnapshot │   │
-│           │                 └──────────────────┘   │
-│           │                                        │
-│  ┌────────┴────────────┐                           │
-│  │                     │                           │
-│  ▼                     ▼                           │
-│ ┌──────────────────┐ ┌──────────────────────┐    │
-│ │ Upstox API       │ │ LLM Provider         │    │
-│ │ • Instrument key │ │ • OpenAI (AICredits) │    │
-│ │ • Candle history │ │ • Gemini             │    │
-│ │ • LTP quotes     │ │ • Mistral            │    │
-│ └──────────────────┘ │ • DeepSeek           │    │
-│                      └──────────────────────┘    │
-└─────────────────────────────────────────────────────┘
-        │                              │
-        └──────────────────┬───────────┘
-                           │
-                    ┌──────▼──────┐
-                    │  Scheduler  │
-                    │ (APScheduler)
-                    │ • Morning run│
-                    │ • Close run  │
-                    └─────────────┘
+Market Open → Generate AI Portfolios → Lock Entry Prices
+     → Track Intraday Prices → Calculate P&L → Update Leaderboard
+```
+
+### 🏆 Live Leaderboard
+
+- Daily Returns
+- Monthly Returns
+- All-Time Returns
+- Portfolio Value
+- Unrealized P&L
+- Model Rankings
+
+### ⚙️ Manual Controls
+
+Administrative endpoints allow manual portfolio generation, valuation updates, TOPSIS testing, and portfolio recalculation — without breaking portfolio integrity.
+
+---
+
+## 🏗️ System Architecture
+
+```
+                    ┌─────────────────┐
+                    │   Scheduler     │
+                    │  APScheduler    │
+                    └────────┬────────┘
+                             │
+                             ▼
+┌────────────────────────────────────────────────────┐
+│                 FastAPI Backend                    │
+├────────────────────────────────────────────────────┤
+│                                                    │
+│  Routes                                            │
+│  ├── /market                                       │
+│  ├── /portfolios                                   │
+│  ├── /leaderboard                                  │
+│  └── /admin/*                                      │
+│                                                    │
+│  Services                                          │
+│  ├── market_data.py                                │
+│  ├── llm_portfolio.py                              │
+│  └── valuation.py                                  │
+│                                                    │
+│  Database                                          │
+│  ├── Portfolio                                     │
+│  ├── Holding                                       │
+│  ├── DailyValuation                                │
+│  └── MarketSnapshot                                │
+└────────────────────────────────────────────────────┘
+             │                        │
+             ▼                        ▼
+      ┌─────────────┐       ┌──────────────────┐
+      │ Upstox API  │       │  LLM Providers   │
+      └─────────────┘       ├──────────────────┤
+                            │ OpenAI           │
+                            │ Gemini           │
+                            │ Mistral          │
+                            │ DeepSeek         │
+                            └──────────────────┘
 ```
 
 ---
 
-## 📋 Prerequisites
-
-- **Python 3.10+**
-- **PostgreSQL 12+** (or any SQLAlchemy-compatible DB)
-- **API Keys:**
-  - Upstox Analytics Token (for market data)
-  - LLM API credentials (OpenAI, Gemini, Mistral, or DeepSeek via AICredits)
-
----
-
-## 🚀 Installation
+## 🚀 Quick Start
 
 ### 1. Clone Repository
+
 ```bash
 git clone https://github.com/yourusername/ai-investment-arena.git
 cd ai-investment-arena
 ```
 
 ### 2. Create Virtual Environment
+
 ```bash
-python3.10 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python -m venv venv
+source venv/bin/activate        # Linux/macOS
+# venv\Scripts\activate         # Windows
 ```
 
 ### 3. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Set Up Environment Variables
-Create `.env` file in project root:
+### 4. Configure Environment Variables
+
+Create a `.env` file:
 
 ```env
-# Database
 DATABASE_URL=postgresql://user:password@localhost:5432/ai_investment_arena
 
-# Upstox
-UPSTOX_ANALYTICS_TOKEN=your_upstox_token_here
+UPSTOX_ANALYTICS_TOKEN=your_token
 
-# LLM API (AICredits unified endpoint)
 AICREDITS_BASE_URL=https://api.aicredits.com/v1
-AICREDITS_API_KEY=your_aicredits_key_here
+AICREDITS_API_KEY=your_api_key
 
-# Scheduler (IST timezone)
 SCHEDULER_TIMEZONE=Asia/Kolkata
 
-# Stock universe
-NIFTY_200_TICKERS=RELIANCE.NS,TCS.NS,INFY.NS,...  # Comma-separated
-TOP_CANDIDATES=15  # Number of stocks to pass to LLM
-STARTING_CAPITAL=100000  # INR, per model
+TOP_CANDIDATES=15
+STARTING_CAPITAL=100000
 ```
 
 ### 5. Initialize Database
+
 ```bash
-# Create tables
-python -c "from database import Base, engine; Base.metadata.create_all(bind=engine)"
+python -c "
+from database import Base, engine
+Base.metadata.create_all(bind=engine)
+"
 ```
 
-### 6. Run Server
+### 6. Start Server
+
 ```bash
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+uvicorn main:app --reload
 ```
 
-Server will be available at `http://localhost:8000`
+- App: [http://localhost:8000](http://localhost:8000)
+- Swagger Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
 
-## 📚 API Endpoints
+## 📡 API Endpoints
 
 ### Market Data
-```
+
+```http
 GET /market
-  Returns latest TOPSIS-ranked candidates for today
-  
-Response:
-{
-  "date": "2026-06-11",
-  "candidates": [
-    {
-      "ticker": "RELIANCE.NS",
-      "current_price": 2850.50,
-      "rsi": 62.3,
-      "volatility": 18.5,
-      "volume_ratio": 1.2,
-      "topsis_score": 0.876,
-      "sector": "Energy"
-    }
-  ]
-}
 ```
+
+Returns latest TOPSIS-ranked stock candidates.
 
 ### Portfolios
-```
-GET /portfolios
-  List all portfolios (filter by model, date range)
-  
-Query params:
-  ?model=gpt&from_date=2026-06-01&to_date=2026-06-11
 
-GET /portfolios/{portfolio_id}
-  Get full portfolio details with valuation history
-  
-Response:
-{
-  "id": 42,
-  "model": "gpt",
-  "date": "2026-06-11",
-  "starting_capital": 100000,
-  "portfolio": [
-    {
-      "ticker": "INFY.NS",
-      "quantity": 25.5,
-      "entry_price": 1850.00,
-      "invested_amount": 47175.00,
-      "allocation_percent": 47.18
-    }
-  ],
-  "latest_valuation": {
-    "portfolio_value": 104067.50,
-    "return_pct": 4.067,
-    "unrealized_pnl": 4067.50
-  }
-}
+```http
+GET /portfolios
+GET /portfolios/{id}
 ```
 
 ### Leaderboard
-```
+
+```http
 GET /leaderboard
-  Rankings by 1-day, 1-month, all-time returns
-  
-Response:
-{
-  "1_day": [
-    {"rank": 1, "model": "gemini", "return_pct": 5.036},
-    {"rank": 2, "model": "gpt", "return_pct": 4.203}
-  ],
-  "30_day": [...],
-  "all_time": [...]
-}
 ```
 
-### Admin / Manual Triggers
-```
-POST /admin/simulate-and-save
-  Trigger manual portfolio generation (preserves entry prices)
-  
-Response:
-{
-  "message": "Portfolio created/updated",
-  "results": {
-    "market_candidates": [...],
-    "model_results": [...]
-  }
-}
+Returns daily, monthly, and all-time rankings.
 
-POST /admin/update-valuations
-  Update today's valuations only (no portfolio recreation)
-  
-Response:
-{
-  "message": "Valuations updated",
-  "portfolios_updated": 4
-}
+### Admin
 
-POST /admin/simulate
-  Lightweight TOPSIS ranking only (no LLM, no DB save)
-  
-Response:
-{
-  "candidates": [...],
-  "count": 15
-}
+```http
+POST /admin/simulate-and-save   # Generate portfolios
+POST /admin/update-valuations   # Update valuations
+POST /admin/simulate            # Run TOPSIS only
 ```
 
 ---
 
 ## 🔄 Daily Workflow
 
-### Morning (~9:30 AM IST)
+### Morning Session — 09:25 AM IST
+
 ```
-1. Scheduler triggers morning_job()
-2. Fetch stock data (3-month historical + current prices)
-3. Calculate indicators (RSI, SMA, volatility, trend score)
-4. Run TOPSIS ranking → Top 15 candidates
-5. For each LLM model:
-   - Pass candidates + previous context
-   - LLM generates portfolio allocation (3-7 stocks)
-   - Lock entry prices and quantities
-   - Save Portfolio + Holdings to DB
-6. Save MarketSnapshot with candidate rankings
+Fetch Market Data → Compute Indicators → TOPSIS Ranking
+     → Top 15 Stocks → LLM Portfolio Generation → Save Portfolios
 ```
 
-### Evening (~3:30 PM IST)
-```
-1. Scheduler triggers close_job()
-2. Fetch latest prices (LTP from Upstox)
-3. For each Portfolio:
-   - Calculate current value: sum(quantity * current_price)
-   - Calculate P&L: current_value - starting_capital
-   - Compute per-holding unrealized gains
-4. Save DailyValuation record
-5. Update leaderboard cache
-```
+### Closing Session — 03:35 PM IST
 
-### Manual Override (Anytime)
 ```
-POST /admin/simulate-and-save
-↓
-Checks if Portfolio exists for today
-├─ YES: Updates valuations only (preserves entry prices) ✓
-└─ NO: Recreates full morning job (new entry prices)
+Fetch Latest Prices → Update Holdings → Calculate P&L
+     → Store Valuations → Update Leaderboard
 ```
 
 ---
 
-## 📊 Data Models
+## 📊 TOPSIS Ranking Methodology
+
+| Factor | Weight |
+|---|---|
+| 1-Month Return | 30% |
+| Volume Ratio | 20% |
+| Trend Score | 20% |
+| RSI Score | 15% |
+| Volatility | 15% |
+
+Stocks receive a final score between `0.0` and `1.0`. Top-ranked stocks are passed to AI portfolio managers.
+
+---
+
+## 🗄️ Database Schema
 
 ### Portfolio
-```python
-class Portfolio(Base):
-    id: int
-    date: date
-    model: str  # "gpt", "gemini", "mistral", "deepseek"
-    starting_capital: float
-    total_invested: float
-    remaining_cash: float
-    strategy_summary: str
-    risk_level: str  # "conservative", "moderate", "aggressive"
-    holdings: List[Holding]  # 1-to-many
-    valuations: List[DailyValuation]  # 1-to-many
+
+```
+Portfolio
+├── model
+├── date
+├── starting_capital
+├── total_invested
+├── remaining_cash
+├── strategy_summary
+└── holdings[]
 ```
 
 ### Holding
-```python
-class Holding(Base):
-    id: int
-    portfolio_id: int
-    ticker: str  # e.g., "RELIANCE.NS"
-    quantity: float
-    entry_price: float
-    invested_amount: float
-    allocation_percent: float
-    confidence: int  # 50-100
-    reasoning: str
-    sector: str
+
+```
+Holding
+├── ticker
+├── quantity
+├── entry_price
+├── allocation_percent
+├── confidence
+└── reasoning
 ```
 
 ### DailyValuation
-```python
-class DailyValuation(Base):
-    id: int
-    portfolio_id: int
-    date: date
-    portfolio_value: float
-    return_pct: float
-    unrealized_pnl: float
-    per_holding_pnl: Dict[str, float]  # ticker → PnL
-```
 
-### MarketSnapshot
-```python
-class MarketSnapshot(Base):
-    id: int
-    date: date
-    ticker: str
-    current_price: float
-    rsi: float
-    sma20: float
-    sma50: float
-    volatility: float
-    volume_ratio: float
-    one_month_return: float
-    trend_score: float
-    topsis_score: float
-    sector: str
+```
+DailyValuation
+├── portfolio_value
+├── return_pct
+├── unrealized_pnl
+└── per_holding_pnl
 ```
 
 ---
 
-## 🔧 Configuration
+## ⚙️ Configuration
 
-### Upstox Integration
-- **Instrument Resolution**: Local cache → CSV master → Search API (3-tier fallback)
-- **Cache TTL**: 7 days (`CACHE_MAX_DAYS`)
-- **Rate Limiting**: 0.25s per search request (polite pacing)
-
-### LLM Models
-Each model has a distinct system prompt:
+### Supported Models
 
 ```python
 SUPPORTED_MODELS = {
-    "gpt": ("gpt-4o-mini", "quantitative, risk-adjusted"),
-    "gemini": ("gemini-2.5-flash-lite-preview-09-2025", "aggressive growth"),
-    "mistral": ("mistralai/voxtral-small-24b-2507", "conservative value"),
-    "deepseek": ("deepseek/deepseek-v4-flash", "pure TOPSIS-driven"),
+    "gpt":      "gpt-4o-mini",
+    "gemini":   "gemini-2.5-flash",
+    "mistral":  "voxtral-small",
+    "deepseek": "deepseek-v4"
 }
 ```
 
-### Scheduler
-```python
-# Scheduled jobs (apscheduler, IST timezone)
-- morning_job()      → 09:25 AM daily (market open)
-- close_job()        → 15:35 PM daily (market close + 5 min buffer)
+### Scheduler Jobs
+
 ```
-
----
-
-## 🚨 Known Issues & Workarounds
-
-### Issue: Manual Override Shows Different Returns
-**Root Cause**: If triggered before scheduled close job, recreates portfolio with intraday prices instead of opening prices.
-
-**Workaround**: 
-```python
-# Only update valuations, don't recreate
-POST /admin/update-valuations
+09:25 AM IST  →  morning_job()
+03:35 PM IST  →  close_job()
 ```
-
-### Issue: Stale Instrument Prices
-**Root Cause**: HTTP client caches responses; long-running sessions don't refresh.
-
-**Workaround**:
-```python
-# Force fresh API call
-get_latest_prices(tickers, force_refresh=True)
-```
-
-### Issue: Zero Portfolio Value
-**Root Cause**: Entry prices not found in MarketSnapshot.
-
-**Workaround**: Ensure `fetch_stock_data()` completes before `generate_portfolio()`.
 
 ---
 
 ## 📈 Performance Metrics
 
-The system tracks:
-- **Daily Return %**: `(current_value - starting_capital) / starting_capital * 100`
-- **Cumulative Return**: Sum of daily returns
-- **Sharpe Ratio**: Risk-adjusted returns (if running 30+ days)
-- **Max Drawdown**: Largest peak-to-trough decline
-- **Win Rate**: % of days portfolio gained value
+| Metric | Description |
+|---|---|
+| Daily Return % | Single-day gain/loss |
+| Monthly Return % | Rolling 30-day performance |
+| Cumulative Return | All-time return since inception |
+| Sharpe Ratio | Risk-adjusted return |
+| Max Drawdown | Largest peak-to-trough decline |
+| Win Rate | % of profitable trading days |
 
 ---
 
-## 🛠️ Development
+## 🧪 Project Structure
 
-### Project Structure
 ```
 ai-investment-arena/
-├── main.py                 # FastAPI app entry
-├── config.py              # Settings (env vars)
-├── database.py            # SQLAlchemy models + session
-├── scheduler.py           # APScheduler jobs
 │
-├── services/
-│   ├── market_data.py     # Upstox API, indicators, TOPSIS
-│   ├── llm_portfolio.py   # LLM prompt building + parsing
-│   └── valuation.py       # P&L calculation
+├── main.py
+├── config.py
+├── database.py
+├── scheduler.py
 │
 ├── routes/
-│   ├── market.py          # GET /market
-│   ├── portfolios.py      # GET /portfolios[/{id}]
-│   ├── leaderboard.py     # GET /leaderboard
-│   └── admin.py           # POST /admin/*
+│   ├── market.py
+│   ├── portfolios.py
+│   ├── leaderboard.py
+│   └── admin.py
 │
-├── requirements.txt       # Dependencies
-├── .env.example          # Template env vars
-└── README.md             # This file
-```
-
-### Running Tests
-```bash
-pytest tests/ -v
-```
-
-### Linting & Formatting
-```bash
-black .
-flake8 .
-mypy services/
+├── services/
+│   ├── market_data.py
+│   ├── llm_portfolio.py
+│   └── valuation.py
+│
+├── requirements.txt
+├── .env.example
+└── README.md
 ```
 
 ---
 
-## 📖 How It Works
+## 🔐 Security
 
-### TOPSIS (Technique for Order of Preference by Similarity to Ideal Solution)
-
-Multi-criteria ranking of stocks across:
-1. **1-month return** (momentum) — 30% weight
-2. **Volume ratio** (trading activity) — 20% weight
-3. **Trend score** (technical setup) — 20% weight
-4. **RSI score** (overbought/oversold) — 15% weight
-5. **Volatility** (risk, lower is better) — 15% weight
-
-**Result**: Score 0.0–1.0 per stock. Top 15 sent to LLM.
-
-### LLM Portfolio Generation
-
-**Input**: Candidate table + previous performance + model personality
-
-**Output**: Portfolio with 3–7 stocks, allocation %, confidence (50–100)
-
-**Key Constraint**: LLM must allocate 100% of capital, only from candidate table.
-
-**Temperature**: 0.65 (deterministic enough for backtesting, varied enough for exploration)
+- Environment-based secrets
+- Database connection isolation
+- Input validation via Pydantic
+- Configurable CORS
+- Rate limiting support
 
 ---
 
-## 🔐 Security Best Practices
+## 🛣️ Roadmap
 
-- ✅ **API Keys**: Never commit `.env` — use GitHub Secrets for CI/CD
-- ✅ **Database**: Connection string in env var, no hardcoding
-- ✅ **CORS**: Restrict to known frontend domains in production
-- ✅ **Rate Limiting**: Implement per-user/IP limits (not included yet)
-- ✅ **Input Validation**: All routes use Pydantic models
-
----
-
-## 📚 Resources
-
-- **Upstox API Docs**: https://api.upstox.com/documentation
-- **TOPSIS Paper**: https://en.wikipedia.org/wiki/TOPSIS
-- **FastAPI**: https://fastapi.tiangolo.com
-- **SQLAlchemy**: https://sqlalchemy.org
+- [ ] Telegram Alerts
+- [ ] Email Notifications
+- [ ] Historical Backtesting
+- [ ] Sharpe & Sortino Analysis
+- [ ] MACD & Bollinger Bands
+- [ ] React Dashboard
+- [ ] Full Test Coverage
 
 ---
 
 ## 🤝 Contributing
 
-Contributions welcome! Please:
-
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/xyz`)
-3. Commit changes (`git commit -am 'Add feature XYZ'`)
-4. Push to branch (`git push origin feature/xyz`)
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-### Areas for Contribution
-- [ ] Real-time portfolio alerts (Telegram/email)
-- [ ] Backtesting framework (historical NIFTY200 data)
-- [ ] Risk metrics (Sharpe, Sortino, max drawdown)
-- [ ] Advanced technical indicators (Bollinger Bands, MACD)
-- [ ] Web frontend (React dashboard)
-- [ ] Unit tests & integration tests
+Contributions are welcome!
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License — see [LICENSE](LICENSE) file for details.
+Released under the [MIT License](LICENSE).
 
 ---
 
-## ⚡ Quick Start (5 Minutes)
+## 🎓 What You'll Learn
 
-```bash
-# 1. Clone & setup
-git clone <repo> && cd ai-investment-arena
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-
-# 2. Configure
-cp .env.example .env
-# Edit .env with your API keys
-
-# 3. Initialize DB
-python -c "from database import Base, engine; Base.metadata.create_all(bind=engine)"
-
-# 4. Run
-uvicorn main:app --reload
-
-# 5. Test (open in browser)
-http://localhost:8000/health
-http://localhost:8000/docs  # Swagger UI
-```
+- Multi-LLM Systems
+- Quantitative Finance
+- Portfolio Simulation
+- TOPSIS Ranking
+- FastAPI
+- SQLAlchemy
+- APScheduler
+- Real-Time Data Pipelines
 
 ---
 
-## 📞 Support
+## ⭐ Support the Project
 
-- **Issues**: GitHub Issues (bug reports, feature requests)
-- **Discussions**: GitHub Discussions (Q&A, ideas)
-- **Email**: your-email@example.com
+If you found this project useful, please consider:
 
----
-
-## 🎓 Learning Outcomes
-
-Building this project teaches:
-- ✅ Multi-model LLM integration (prompt engineering)
-- ✅ Real-time financial data pipelines
-- ✅ Time-series portfolio valuation
-- ✅ Quantitative ranking (TOPSIS)
-- ✅ FastAPI + SQLAlchemy patterns
-- ✅ Scheduled jobs in production (APScheduler)
-- ✅ Data integrity under manual overrides
+- ⭐ Starring the repository
+- 🍴 Forking it
+- 🛠️ Contributing
 
 ---
 
-**Made with ❤️ for quantitative finance enthusiasts**
-
-⭐ If this project helps, please star it on GitHub! 
+*Built for AI, Finance, and Quantitative Investing Enthusiasts. 🚀*
