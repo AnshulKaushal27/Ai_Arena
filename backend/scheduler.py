@@ -5,6 +5,7 @@ from datetime import date
 import pytz
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
+from sqlalchemy import insert
 
 from config import settings
 from database import (
@@ -128,16 +129,10 @@ async def morning_job():
         candidates = apply_topsis(stocks, n_candidates=settings.TOP_CANDIDATES)
         logger.info(f"Top {len(candidates)} candidates selected by TOPSIS")
 
-        # ③ Save market snapshot (upsert)
+        # ③ Save market snapshot (upsert with ON CONFLICT)
         for snap_data in candidates:
-            existing_snap = (
-                db.query(MarketSnapshot)
-                .filter(MarketSnapshot.date == today, MarketSnapshot.ticker == snap_data["ticker"])
-                .first()
-            )
-            if existing_snap:
-                continue  # already saved today
-            db.add(MarketSnapshot(
+            # Use INSERT ... ON CONFLICT ... DO UPDATE (PostgreSQL upsert)
+            stmt = insert(MarketSnapshot).values(
                 date            = today,
                 ticker          = snap_data["ticker"],
                 current_price   = snap_data.get("current_price", 0),
@@ -151,7 +146,26 @@ async def morning_job():
                 trend_score     = snap_data.get("trend_score", 0),
                 rsi_distance    = snap_data.get("rsi_distance", 0),
                 topsis_score    = snap_data.get("topsis_score", 0),
-            ))
+            )
+            
+            # On conflict (date, ticker), update all fields
+            stmt = stmt.on_conflict_do_update(
+                index_elements=["date", "ticker"],
+                set_={
+                    "current_price": snap_data.get("current_price", 0),
+                    "rsi": snap_data.get("rsi", 0),
+                    "sma20": snap_data.get("sma20", 0),
+                    "sma50": snap_data.get("sma50", 0),
+                    "volatility": snap_data.get("volatility", 0),
+                    "volume_ratio": snap_data.get("volume_ratio", 0),
+                    "one_month_return": snap_data.get("one_month_return", 0),
+                    "sector": snap_data.get("sector", "Unknown"),
+                    "trend_score": snap_data.get("trend_score", 0),
+                    "rsi_distance": snap_data.get("rsi_distance", 0),
+                    "topsis_score": snap_data.get("topsis_score", 0),
+                }
+            )
+            db.execute(stmt)
         db.commit()
 
         # ④ Generate portfolio per model
@@ -308,3 +322,4 @@ def _portfolio_to_dict(p: Portfolio) -> dict:
             for h in p.holdings
         ],
     }
+
